@@ -1,0 +1,111 @@
+import React, { useState, useEffect } from "react";
+import { Card, CardContent } from "./components/ui/card";
+import { Button } from "./components/ui/button";
+import { motion } from "framer-motion";
+import jsPDF from "jspdf";
+import Confetti from "react-confetti";
+
+const initialPeople = [
+  { id: 1, name: "Shreyas", gifts: ["Ikea gift card", "Lego flower set", "\"Theatre is my sport\" hoodie", "Hamilton book", "LED light strips"] },
+  { id: 2, name: "Sidharth", gifts: ["SF 49ers jersey", "Mini basketball hoop", "Sketchbook", "LEGO sports set", "Personalized water bottle"] },
+  { id: 3, name: "Neha", gifts: ["Woodworking kit", "Gardening tools", "Seeds", "Bird watching book (To overcome your fears)", "Cooking magazine"] },
+  { id: 4, name: "Viraaj", gifts: ["LED keyboard/mouse", "Piano cover", "Immersive sound system", "Cookbook (Learn it, live it!)", "Headphones"] },
+  { id: 5, name: "Tanay", gifts: ["Soccer ball", "Outdoor explorer kit", "Ice cream maker", "Board game", "Water blaster"] },
+  { id: 6, name: "Gauri", gifts: ["Mini watercolor set", "Elegant journal", "Piano poster", "Board game", "Art course"] },
+  { id: 7, name: "Mukund", gifts: ["Theatre tickets", "BBQ spice set", "Thespian autobiography", "Personalized apron", "\"Off to rehearsal\" mug"] }
+];
+
+export default function App() {
+  const [expandedPerson, setExpandedPerson] = useState(null);
+  const [giftList, setGiftList] = useState([]);
+  const [budgetOpen, setBudgetOpen] = useState(false);
+  const [budget, setBudget] = useState(0);
+  const [showConfetti, setShowConfetti] = useState(false);
+  const [greeting, setGreeting] = useState("");
+
+  useEffect(() => {
+    const hour = new Date().getHours();
+    setGreeting(hour < 12 ? "Good morning, Aaji!" : hour < 18 ? "Good afternoon, Aaji!" : "Good evening, Aaji!");
+  }, []);
+
+  const addToGiftList = (item) => {
+    setGiftList([...giftList, { text: item, notes: "" }]);
+    setShowConfetti(true);
+    setTimeout(() => setShowConfetti(false), 1500);
+  };
+
+  const removeFromGiftList = (index) => {
+    const newList = [...giftList];
+    newList.splice(index, 1);
+    setGiftList(newList);
+  };
+
+  const updateNote = (index, note) => {
+    const newList = [...giftList];
+    newList[index].notes = note;
+    setGiftList(newList);
+  };
+
+  const downloadPDF = () => {
+    const doc = new jsPDF();
+    doc.setFontSize(16);
+    doc.text("Aaji's Gift List", 20, 20);
+    giftList.forEach((item, index) => {
+      doc.text(`${index + 1}. ${item.text}${item.notes ? ' (Note: ' + item.notes + ')' : ''}`, 20, 30 + index * 10);
+    });
+    doc.save("Aaji_Gift_List.pdf");
+  };
+
+  return (
+    <div className="min-h-screen p-4 bg-gradient-to-b from-red-100 via-white to-green-100 flex flex-col items-center font-sans relative overflow-hidden">
+
+      {/* Snowflakes */}
+      <div className="absolute top-0 left-0 w-full h-full overflow-hidden pointer-events-none z-0">
+        {Array.from({ length: 15 }).map((_, i) => (
+          <div key={i} className="animate-snowflake absolute w-2 h-2 bg-white rounded-full opacity-30" style={{ top: `${Math.random()*100}%`, left: `${Math.random()*100}%`, animationDelay: `${Math.random()*10}s` }}></div>
+        ))}
+      </div>
+
+      {/* Twinkling Lights */}
+      <div className="absolute top-0 left-0 w-full h-full pointer-events-none overflow-hidden z-0">
+        {Array.from({ length: 30 }).map((_, i) => (
+          <div
+            key={i}
+            className="twinkle absolute bg-yellow-300 rounded-full"
+            style={{
+              width: `${Math.random() * 6 + 4}px`,
+              height: `${Math.random() * 6 + 4}px`,
+              top: `${Math.random() * 100}%`,
+              left: `${Math.random() * 100}%`,
+              animationDelay: `${Math.random() * 5}s`
+            }}
+          />
+        ))}
+      </div>
+
+      {showConfetti && <Confetti width={window.innerWidth} height={window.innerHeight} recycle={false} numberOfPieces={100} />}
+
+      <p className="text-xl text-green-800 font-semibold mb-1 z-10">{greeting}</p>
+      <motion.h1 initial={{ opacity: 0, y: -10 }} animate={{ opacity: 1, y: 0 }} className="text-4xl md:text-5xl font-extrabold mb-2 text-red-700 drop-shadow-lg z-10">
+        Hi Rekha, Ready to Gift? 🎁
+      </motion.h1>
+
+      <div className="flex flex-col md:flex-row w-full max-w-6xl gap-6 z-10">
+        {/* People Grid */}
+        <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4 flex-1">
+          {initialPeople.map(person => (
+            <motion.div key={person.id} whileHover={{ scale: 1.05, rotate: 1 }} className="cursor-pointer">
+              <Card className="rounded-3xl shadow-2xl border-2 border-green-400 bg-white/95 transition-transform duration-300" onClick={() => setExpandedPerson(expandedPerson === person.id ? null : person.id)}>
+                <CardContent className="p-4 flex flex-col items-center">
+                  <p className="text-xl md:text-2xl font-semibold text-green-800 mb-1">{person.name}</p>
+                  <p className="text-sm md:text-md text-gray-600">Tap to {expandedPerson === person.id ? 'hide' : 'view'} gift ideas 🎄</p>
+                </CardContent>
+              </Card>
+              {expandedPerson === person.id && (
+                <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="mt-2 bg-white/90 p-3 rounded-lg shadow-inner flex flex-col gap-2">
+                  {person.gifts.map((gift, idx) => (
+                    <div key={idx} className="flex justify-between items-center">
+                      <span>{gift}</span>
+                      <Button className="bg-green-600 text-white hover:bg-green-700 text-sm px-2 py-1 rounded" onClick={() => addToGiftList(gift)}>Add</Button>
+                    </div>
+                  )

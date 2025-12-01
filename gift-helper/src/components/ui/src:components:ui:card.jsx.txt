@@ -1,0 +1,11 @@
+import React from "react";
+
+export function Card({ children, className, onClick }) {
+  return (
+    <div className={`p-2 rounded shadow ${className}`} onClick={onClick}>
+      {children}
+    </div>
+  );
+}
+
+export default Card;
